@@ -27,7 +27,7 @@ runs:
         set -ex
         sudo apt-get update
         sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release jq python3 python-is-python3 python3-pip
-    - if: ${{ input.terraform }}
+    - if: ${{ inputs.terraform }}
       name: Install Terraform
       shell: bash
       run: |
@@ -35,14 +35,14 @@ runs:
         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
         sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
         sudo apt install -y terraform
-    - if: ${{ input.docker }}
+    - if: ${{ inputs.docker }}
       name: Install Docker
       shell: bash
       run: |
         set -ex
         sudo apt-get install -y docker.io
         sudo adduser "$USER" docker
-    - if: ${{ input.k3s }}
+    - if: ${{ inputs.k3s }}
       name: Install K3s
       shell: bash
       run: |
