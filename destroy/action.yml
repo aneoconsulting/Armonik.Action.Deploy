@@ -1,0 +1,36 @@
+name: "Destroy ArmoniK deployment"
+description: "Action to destroy ArmoniK deployment"
+inputs:
+  type:
+    description: 'Type of deployment (either "aws" or "localhost")'
+    required: true
+  prefix:
+    description: "Prefix for the deployment"
+    required: false
+    default: "armonik-cicd"
+
+runs:
+  using: composite
+  steps:
+    - id: apply
+      name: Apply
+      shell: bash
+      env:
+        INPUT_TYPE: ${{ inputs.type }}
+      run: |
+        set -ex
+        cd infrastructure/quick-deploy/
+        cd "$INPUT_TYPE"
+        [ ! -e all ] || cd all
+        make PREFIX=${{ inputs.prefix }} init
+        make PREFIX=${{ inputs.prefix }} output
+        EKS_NAME="$(jq -r .eks.name generated/armonik-output.json)"
+        EKS_REGION="$(jq -r .eks.region generated/armonik-output.json)"
+        [ "$EKS_NAME" != null ] || EKS_NAME=
+        [ "$EKS_REGION" != null ] || EKS_REGION=
+        if [ -n "$EKS_NAME" -a -n "$EKS_REGION" ]; then
+          aws eks update-kubeconfig --region "$EKS_REGION" --name "$EKS_NAME"
+          cat ~/.kube/config
+        fi
+        TF_DATA_DIR=generated terraform state rm module.eks.null_resource.update_kubeconfig || true
+        make PREFIX=${{ inputs.prefix }} delete

@@ -1,0 +1,72 @@
+name: "Deploy ArmoniK"
+description: "Action to deploy ArmoniK"
+inputs:
+  type:
+    description: 'Type of deployment (either "aws" or "localhost")'
+    required: true
+  tls:
+    description: "Enable TLS"
+    type: boolean
+    required: false
+    default: false
+  mtls:
+    description: "Enable mTLS"
+    type: boolean
+    required: false
+    default: false
+  core-version:
+    description: "Version of core to deploy"
+    required: false
+    default: ""
+  gui-version:
+    description: "Version of gui to deploy"
+    required: false
+    default: ""
+  ext-csharp-version:
+    description: "Version of Extension Csharp to deploy"
+    required: false
+    default: ""
+  prefix:
+    description: "Prefix for the deployment"
+    required: false
+    default: "armonik-cicd"
+outputs:
+  terraform-output:
+    description: "Terraform output of the deployment"
+    value: ${{ steps.apply.outputs.terraform-output }}
+
+runs:
+  using: composite
+  steps:
+    - id: patch
+      name: Patch tfvars
+      shell: bash
+      env:
+        CORE_VERSION: ${{ inputs.core-version }}
+        GUI_VERSION: ${{ inputs.gui-version }}
+        EXT_CSHARP_VERSION: ${{ inputs.ext-csharp-version }}
+      run: |
+        set -ex
+        [ -z "$CORE_VERSION" ] || jq ".armonik_versions.core = \"$CORE_VERSION\"" versions.tfvars.json
+        [ -z "$GUI_VERSION" ] || jq ".armonik_versions.gui = \"$GUI_VERSION\"" versions.tfvars.json
+        [ -z "$EXT_CSHARP_VERSION" ] || jq ".armonik_versions.extcsharp = \"$EXT_CSHARP_VERSION\"" versions.tfvars.json
+    - id: apply
+      name: Apply
+      shell: bash
+      env:
+        INPUT_TYPE: ${{ inputs.type }}
+      run: |
+        set -ex
+        cd infrastructure/quick-deploy/
+        cd "$INPUT_TYPE"
+        [ ! -e all ] || cd all
+        make PREFIX=${{ inputs.prefix }} deploy
+        
+        cat ~/.kube/config
+
+        {
+          echo 'terraform-output<<__TERRAFORM_EOF__'
+          cat generated/armonik-output.json
+          echo
+          echo __TERRAFORM_EOF__
+        } >> "$GITHUB_OUTPUT"
