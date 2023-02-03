@@ -10,17 +10,24 @@ inputs:
     description: "Install docker"
     type: boolean
     required: false
-    default: false
+    default: true
   k3s:
     description: "Install K3s"
     type: boolean
     required: false
-    default: false
+    default: true
   terraform:
     description: "Install Terraform"
     type: boolean
     required: false
     default: false
+secrets:
+  AWS_ACCESS_KEY_ID:
+    required: false
+    default: ""
+  AWS_SECRET_ACCESS_KEY:
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -74,3 +81,13 @@ runs:
         echo "$(cat kubectl.sha256) kubectl" | sha256sum --check
         mkdir -p ~/.kube
         sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    - if: ${{ inputs.aws && inputs.aws != 'false' }}
+      name: AWS Credentials
+      shell: bash
+      run: |
+          mkdir ~/.aws
+          cat > ~/.aws/credentials <<EOF
+          [default]
+          aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EOF

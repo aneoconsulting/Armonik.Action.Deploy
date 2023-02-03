@@ -47,26 +47,38 @@ runs:
         EXT_CSHARP_VERSION: ${{ inputs.ext-csharp-version }}
       run: |
         set -ex
-        [ -z "$CORE_VERSION" ] || jq ".armonik_versions.core = \"$CORE_VERSION\"" versions.tfvars.json
-        [ -z "$GUI_VERSION" ] || jq ".armonik_versions.gui = \"$GUI_VERSION\"" versions.tfvars.json
-        [ -z "$EXT_CSHARP_VERSION" ] || jq ".armonik_versions.extcsharp = \"$EXT_CSHARP_VERSION\"" versions.tfvars.json
+        update_version() {
+          local component version
+          component="$1"
+          version="$2"
+          if [ -n "$VERSION" ]; then
+            jq ".armonik_versions.$component = \"$version\"" versions.tfvars.json > .versions.tfvars.json
+            mv .versions.tfvars.json versions.tfvars.json
+          fi
+        }
+        update_version core "$CORE_VERSION"
+        update_version gui "$GUI_VERSION"
+        update_version extcsharp "$EXT_CSHARP_VERSION"
     - id: apply
       name: Apply
       shell: bash
       env:
         INPUT_TYPE: ${{ inputs.type }}
+        INPUT_PREFIX: ${{ inputs.prefix }}
       run: |
         set -ex
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
         [ ! -e all ] || cd all
-        make PREFIX=${{ inputs.prefix }} deploy
-        
-        cat ~/.kube/config
+        make PREFIX="$INPUT_PREFIX" deploy
 
         {
-          echo 'terraform-output<<__TERRAFORM_EOF__'
+          echo 'kube-config<<__GITHUB_EOF__'
+          cat ~/.kube/config
+          echo
+          echo __GITHUB_EOF__
+          echo 'terraform-output<<__GITHUB_EOF__'
           cat generated/armonik-output.json
           echo
-          echo __TERRAFORM_EOF__
+          echo __GITHUB_EOF__
         } >> "$GITHUB_OUTPUT"
