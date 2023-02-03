@@ -51,7 +51,7 @@ runs:
           local component version
           component="$1"
           version="$2"
-          if [ -n "$VERSION" ]; then
+          if [ -n "$version" ]; then
             jq ".armonik_versions.$component = \"$version\"" versions.tfvars.json > .versions.tfvars.json
             mv .versions.tfvars.json versions.tfvars.json
           fi
@@ -73,12 +73,21 @@ runs:
         make PREFIX="$INPUT_PREFIX" deploy
 
         {
-          echo 'kube-config<<__GITHUB_EOF__'
-          cat ~/.kube/config
-          echo
-          echo __GITHUB_EOF__
           echo 'terraform-output<<__GITHUB_EOF__'
           cat generated/armonik-output.json
           echo
           echo __GITHUB_EOF__
         } >> "$GITHUB_OUTPUT"
+    - name: Terraform output
+      uses: actions/upload-artifact@v3
+      with:
+        name: terraform-output
+        path: |
+          infrastructure/quick-deploy/${{ inputs.type }}/generated
+          !infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
+          !infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
+          !infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
+          infrastructure/quick-deploy/${{ inputs.type }}/all/generated
+          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
+          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
+          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
