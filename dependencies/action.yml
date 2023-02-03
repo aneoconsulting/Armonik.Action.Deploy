@@ -10,18 +10,17 @@ inputs:
     description: "Install docker"
     type: boolean
     required: false
-    default: true
+    default: false
   k3s:
     description: "Install K3s"
     type: boolean
     required: false
-    default: true
+    default: false
   terraform:
     description: "Install Terraform"
     type: boolean
     required: false
     default: false
-secrets:
   AWS_ACCESS_KEY_ID:
     required: false
     default: ""
@@ -84,10 +83,16 @@ runs:
     - if: ${{ inputs.aws && inputs.aws != 'false' }}
       name: AWS Credentials
       shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
       run: |
+        set -ex
+        if [ -n "$AWS_ACCESS_KEY_ID" -a -n "$AWS_SECRET_ACCESS_KEY" ]; then
           mkdir ~/.aws
           cat > ~/.aws/credentials <<EOF
-          [default]
-          aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          EOF
+        [default]
+        aws_access_key_id = $AWS_ACCESS_KEY_ID
+        aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
+        EOF
+        fi
