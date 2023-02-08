@@ -4,16 +4,6 @@ inputs:
   type:
     description: 'Type of deployment (either "aws" or "localhost")'
     required: true
-  tls:
-    description: "Enable TLS"
-    type: boolean
-    required: false
-    default: false
-  mtls:
-    description: "Enable mTLS"
-    type: boolean
-    required: false
-    default: false
   core-version:
     description: "Version of core to deploy"
     required: false

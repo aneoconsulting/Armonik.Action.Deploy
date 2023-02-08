@@ -13,8 +13,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - id: deploy
-      name: Deploy Bootstrap
+    - id: destroy
+      name: Destroy Bootstrap
       shell: bash
       env:
         INPUT_TYPE: ${{ inputs.type }}
