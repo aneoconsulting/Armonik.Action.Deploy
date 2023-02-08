@@ -1,0 +1,27 @@
+name: "Destroy ArmoniK deployment"
+description: "Action to destroy ArmoniK deployment"
+inputs:
+  type:
+    description: 'Type of deployment (for now, only "aws")'
+    required: false
+    default: "aws"
+  prefix:
+    description: "Prefix for the deployment"
+    required: false
+    default: "armonik-cicd"
+
+runs:
+  using: composite
+  steps:
+    - id: deploy
+      name: Deploy Bootstrap
+      shell: bash
+      env:
+        INPUT_TYPE: ${{ inputs.type }}
+        INPUT_PREFIX: ${{ inputs.prefix }}
+      run: |
+        set -ex
+        cd infrastructure/quick-deploy/
+        cd "$INPUT_TYPE"
+        [ ! -e all ] || cd all
+        make PREFIX="$INPUT_PREFIX" bootstrap-deploy
