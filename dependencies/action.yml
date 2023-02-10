@@ -27,6 +27,9 @@ inputs:
   AWS_SECRET_ACCESS_KEY:
     required: false
     default: ""
+  AWS_REGION:
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -81,18 +84,26 @@ runs:
         mkdir -p ~/.kube
         sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     - if: ${{ inputs.aws && inputs.aws != 'false' }}
-      name: AWS Credentials
+      name: AWS Config
       shell: bash
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ inputs.AWS_REGION }}
       run: |
         set -ex
         if [ -n "$AWS_ACCESS_KEY_ID" -a -n "$AWS_SECRET_ACCESS_KEY" ]; then
-          mkdir ~/.aws
+          mkdir -p ~/.aws
           cat > ~/.aws/credentials <<EOF
         [default]
         aws_access_key_id = $AWS_ACCESS_KEY_ID
         aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
+        EOF
+        fi
+        if [ -n "$AWS_REGION" ]; then
+          mkdir -p ~/.aws
+          cat > ~/.aws/config <<EOF
+        [default]
+        region = $AWS_REGION
         EOF
         fi
