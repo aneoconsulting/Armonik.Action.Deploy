@@ -1,0 +1,83 @@
+name: "Deploy ArmoniK"
+description: "Action to deploy ArmoniK"
+inputs:
+  type:
+    description: 'Type of deployment (either "aws" or "localhost")'
+    required: true
+  core-version:
+    description: "Version of core to deploy"
+    required: false
+    default: ""
+  gui-version:
+    description: "Version of gui to deploy"
+    required: false
+    default: ""
+  ext-csharp-version:
+    description: "Version of Extension Csharp to deploy"
+    required: false
+    default: ""
+  prefix:
+    description: "Prefix for the deployment"
+    required: false
+    default: "armonik-cicd"
+outputs:
+  terraform-output:
+    description: "Terraform output of the deployment"
+    value: ${{ steps.apply.outputs.terraform-output }}
+
+runs:
+  using: composite
+  steps:
+    - id: patch
+      name: Patch tfvars
+      shell: bash
+      env:
+        CORE_VERSION: ${{ inputs.core-version }}
+        GUI_VERSION: ${{ inputs.gui-version }}
+        EXT_CSHARP_VERSION: ${{ inputs.ext-csharp-version }}
+      run: |
+        set -ex
+        update_version() {
+          local component version
+          component="$1"
+          version="$2"
+          if [ -n "$version" ]; then
+            jq ".armonik_versions.$component = \"$version\"" versions.tfvars.json > .versions.tfvars.json
+            mv .versions.tfvars.json versions.tfvars.json
+          fi
+        }
+        update_version core "$CORE_VERSION"
+        update_version gui "$GUI_VERSION"
+        update_version extcsharp "$EXT_CSHARP_VERSION"
+    - id: apply
+      name: Apply
+      shell: bash
+      env:
+        INPUT_TYPE: ${{ inputs.type }}
+        INPUT_PREFIX: ${{ inputs.prefix }}
+      run: |
+        set -ex
+        cd infrastructure/quick-deploy/
+        cd "$INPUT_TYPE"
+        [ ! -e all ] || cd all
+        make PREFIX="$INPUT_PREFIX" deploy
+
+        {
+          echo 'terraform-output<<__GITHUB_EOF__'
+          cat generated/armonik-output.json
+          echo
+          echo __GITHUB_EOF__
+        } >> "$GITHUB_OUTPUT"
+    - name: Terraform output
+      uses: actions/upload-artifact@v3
+      with:
+        name: terraform-output
+        path: |
+          infrastructure/quick-deploy/${{ inputs.type }}/generated
+          !infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
+          !infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
+          !infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
+          infrastructure/quick-deploy/${{ inputs.type }}/all/generated
+          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
+          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
+          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
