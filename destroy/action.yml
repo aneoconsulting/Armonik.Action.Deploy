@@ -1,4 +1,4 @@
-name: "Destroy ArmoniK deployment"
+name: "Destroy ArmoniK"
 description: "Action to destroy ArmoniK deployment"
 inputs:
   type:

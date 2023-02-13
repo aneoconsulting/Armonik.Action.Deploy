@@ -1,5 +1,5 @@
-name: "Destroy ArmoniK deployment"
-description: "Action to destroy ArmoniK deployment"
+name: "Bootstrap deploy"
+description: "Action to dieploy S3 for deployment tfstates"
 inputs:
   type:
     description: 'Type of deployment (for now, only "aws")'
