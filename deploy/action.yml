@@ -24,7 +24,6 @@ outputs:
   terraform-output:
     description: "Terraform output of the deployment"
     value: ${{ steps.apply.outputs.terraform-output }}
-
 runs:
   using: composite
   steps:
@@ -61,7 +60,6 @@ runs:
         cd "$INPUT_TYPE"
         [ ! -e all ] || cd all
         make PREFIX="$INPUT_PREFIX" deploy
-
         {
           echo 'terraform-output<<__GITHUB_EOF__'
           cat generated/armonik-output.json

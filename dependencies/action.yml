@@ -2,7 +2,7 @@ name: "Install ArmoniK dependencies"
 description: "Action to install dependencies required to deploy or use ArmoniK"
 inputs:
   aws:
-    description: "Install dependencies for AWS"
+    description: "Install AWS CLI"
     type: boolean
     required: false
     default: false
@@ -51,9 +51,17 @@ runs:
         if ! which terraform 2>/dev/null; then
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt install -y terraform
+          sudo apt-get install -y terraform
+        fi 
+    - if: ${{ inputs.aws && inputs.aws != 'false' }}   
+      name: Install AWS CLI
+      shell: bash
+      run: |
+        set -ex
+        if ! which aws 2>/dev/null; then
+          sh tools/install/aws-cli.sh
         fi
-    - if: ${{ inputs.docker && inputs.docker != 'false' }}
+    - if: ${{ inputs.docker && inputs.docker != 'false' }}  
       name: Install Docker
       shell: bash
       run: |
