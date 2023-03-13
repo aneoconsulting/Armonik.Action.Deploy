@@ -39,7 +39,6 @@ runs:
   shell: bash
   steps:
     - name: Install common dependencies
-      
       run: |
         set -ex
         sudo apt-get update
