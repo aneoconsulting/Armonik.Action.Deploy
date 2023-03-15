@@ -2,7 +2,7 @@ name: "Install ArmoniK dependencies"
 description: "Action to install dependencies required to deploy or use ArmoniK"
 inputs:
   aws:
-    description: "Install dependencies for AWS"
+    description: "Install AWS CLI"
     type: boolean
     required: false
     default: false
@@ -36,26 +36,33 @@ inputs:
 
 runs:
   using: composite
+  shell: bash
   steps:
     - name: Install common dependencies
-      shell: bash
       run: |
         set -ex
         sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release jq python3 python-is-python3 python3-pip
+        sudo apt-get install -y apt-transport-https ca-certificates unzip curl gnupg lsb-release jq python3 python-is-python3 python3-pip
     - if: ${{ inputs.terraform && inputs.terraform != 'false' }}
       name: Install Terraform
-      shell: bash
       run: |
         set -ex
         if ! which terraform 2>/dev/null; then
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt install -y terraform
+          sudo apt-get install -y terraform
+        fi 
+    - if: ${{ inputs.aws && inputs.aws != 'false' }}
+      name: Install AWS CLI
+      run: |
+        set -ex
+        if ! which aws 2>/dev/null; then
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" unzip awscliv2.zip
+          sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
+          rm -rf aws awscliv2.zip
         fi
     - if: ${{ inputs.docker && inputs.docker != 'false' }}
       name: Install Docker
-      shell: bash
       run: |
         set -ex
         if ! which docker 2>/dev/null; then
@@ -76,15 +83,13 @@ runs:
         
     - if: ${{ inputs.k3s && inputs.k3s != 'false' }}
       name: Install K3s
-      shell: bash
       env:
         INSTALL_K3S_VERSION: ${{ inputs.K3S_VERSION }}
       run: |
         set -ex
         curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 --docker --write-kubeconfig ~/.kube/config
         sudo chown runner: -R ~/.kube
-    - name: Install Kubectl
-      shell: bash
+    - name: Install Kubectl 
       run: |
         set -ex
         curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -94,7 +99,6 @@ runs:
         sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     - if: ${{ inputs.aws && inputs.aws != 'false' }}
       name: AWS Config
-      shell: bash
       env:
         AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
