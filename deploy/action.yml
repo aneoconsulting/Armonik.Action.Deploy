@@ -44,6 +44,9 @@ outputs:
   terraform-output:
     description: "Terraform output of the deployment"
     value: ${{ steps.apply.outputs.terraform-output }}
+  generated-folder:
+    description: "Generated folder"
+    value: ${{ steps.apply.outputs.generated-folder }}
 runs:
   using: composite
   steps:
@@ -111,6 +114,8 @@ runs:
           echo
           echo __GITHUB_EOF__
         } >> "$GITHUB_OUTPUT"
+        cd generated
+        echo "generated-folder=$(pwd)" >> "$GITHUB_OUTPUT"
     - name: Terraform output
       uses: actions/upload-artifact@v3
       with:
