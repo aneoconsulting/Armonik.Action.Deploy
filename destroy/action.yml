@@ -11,7 +11,7 @@ inputs:
   working-directory:
     descriptiont: "Working directory (should be the ArmoniK repo root folder)"
     required: false
-    default: $GITHUB_WORKSPACE
+    default: ${{ github.workspace }}
 
 runs:
   using: composite
