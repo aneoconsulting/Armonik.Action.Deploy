@@ -20,6 +20,22 @@ inputs:
     description: "Prefix for the deployment"
     required: false
     default: "armonik-cicd"
+  tls:
+    description: "Use TLS for ingress"
+    required: false
+    default: false
+  mtls:
+    description: "Use mTLS for ingress"
+    required: false
+    default: false
+  generate-client-cert:
+    description: "Generate custom client certificates"
+    required: false
+    default : false
+  custom-client-ca:
+    description: "Path to custom client certificate authority"
+    required: false
+    default: ""
 outputs:
   terraform-output:
     description: "Terraform output of the deployment"
@@ -28,7 +44,7 @@ runs:
   using: composite
   steps:
     - id: patch
-      name: Patch tfvars
+      name: Patch versions
       shell: bash
       env:
         CORE_VERSION: ${{ inputs.core-version }}
@@ -48,6 +64,28 @@ runs:
         update_version core "$CORE_VERSION"
         update_version gui "$GUI_VERSION"
         update_version extcsharp "$EXT_CSHARP_VERSION"
+    - id: options
+      name: Patch options
+      shell: bash
+      env:
+        TLS: ${{ inputs.tls }}
+        MTLS: ${{ inputs.mtls }}
+        GENCERT: ${{ inputs.generate-client-cert }}
+        CUSTOM_CA: ${{ inputs.custom-client-ca }}
+      run: |
+        set -ex
+        ingress() {
+          local tls mtls gencert custom_ca
+          tls="$1"
+          mtls="$2"
+          gencert="$3"
+          custom_ca="$4"
+          if [ "$tls" == "true" ]; then
+            jq --argjson tls "$tls" --argjson mtls "$mtls" --argjson gencert "$gencert" --arg custom_ca "$custom_ca" '.ingress={tls:$tls, mtls:$mtls, generate_client_cert:$gencert, custom_client_ca_file:$custom_ca}' extra.tfvars.json > .extra.tfvars.json
+            mv .extra.tfvars.json extra.tfvars.json
+          fi
+        }
+        ingress "$TLS" "$MTLS" "$GENCERT" "$CUSTOM_CA"
     - id: apply
       name: Apply
       shell: bash
