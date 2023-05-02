@@ -46,13 +46,11 @@ outputs:
     value: ${{ steps.apply.outputs.terraform-output }}
 runs:
   using: composite
-  defaults:
-    run:
-      working-directory: ${{ inputs.working-directory }}
   steps:
     - id: patch
       name: Patch versions
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         CORE_VERSION: ${{ inputs.core-version }}
         GUI_VERSION: ${{ inputs.gui-version }}
@@ -74,6 +72,7 @@ runs:
     - id: options
       name: Patch options
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         TLS: ${{ inputs.tls }}
         MTLS: ${{ inputs.mtls }}
@@ -96,6 +95,7 @@ runs:
     - id: apply
       name: Apply
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         INPUT_TYPE: ${{ inputs.type }}
         INPUT_PREFIX: ${{ inputs.prefix }}
@@ -116,11 +116,11 @@ runs:
       with:
         name: terraform-output
         path: |
-          infrastructure/quick-deploy/${{ inputs.type }}/generated
-          !infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
-          !infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
-          !infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
-          infrastructure/quick-deploy/${{ inputs.type }}/all/generated
-          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
-          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
-          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
+          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
+          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix

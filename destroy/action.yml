@@ -15,12 +15,10 @@ inputs:
 
 runs:
   using: composite
-  defaults:
-    run:
-      working-directory: ${{ inputs.working-directory }}
   steps:
     - id: destroy
       name: Destroy
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
       env:
         INPUT_TYPE: ${{ inputs.type }}
