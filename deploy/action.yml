@@ -36,12 +36,19 @@ inputs:
     description: "Path to custom client certificate authority"
     required: false
     default: ""
+  working-directory:
+    descriptiont: "Working directory (should be the ArmoniK repo root folder)"
+    required: false
+    default: $GITHUB_WORKSPACE
 outputs:
   terraform-output:
     description: "Terraform output of the deployment"
     value: ${{ steps.apply.outputs.terraform-output }}
 runs:
   using: composite
+  defaults:
+    run:
+      working-directory: ${{ inputs.working-directory }}
   steps:
     - id: patch
       name: Patch versions
