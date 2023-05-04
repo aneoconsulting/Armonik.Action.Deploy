@@ -8,12 +8,17 @@ inputs:
     description: "Prefix for the deployment"
     required: false
     default: "armonik-cicd"
+  working-directory:
+    descriptiont: "Working directory (should be the ArmoniK repo root folder)"
+    required: false
+    default: ${{ github.workspace }}
 
 runs:
   using: composite
   steps:
     - id: destroy
       name: Destroy
+      working-directory: ${{ inputs.working-directory }}
       shell: bash
       env:
         INPUT_TYPE: ${{ inputs.type }}

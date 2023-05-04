@@ -36,16 +36,24 @@ inputs:
     description: "Path to custom client certificate authority"
     required: false
     default: ""
+  working-directory:
+    descriptiont: "Working directory (should be the ArmoniK repo root folder)"
+    required: false
+    default: ${{ github.workspace }}
 outputs:
   terraform-output:
     description: "Terraform output of the deployment"
     value: ${{ steps.apply.outputs.terraform-output }}
+  generated-folder:
+    description: "Generated folder"
+    value: ${{ steps.apply.outputs.generated-folder }}
 runs:
   using: composite
   steps:
     - id: patch
       name: Patch versions
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         CORE_VERSION: ${{ inputs.core-version }}
         GUI_VERSION: ${{ inputs.gui-version }}
@@ -67,6 +75,7 @@ runs:
     - id: options
       name: Patch options
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         TLS: ${{ inputs.tls }}
         MTLS: ${{ inputs.mtls }}
@@ -89,6 +98,7 @@ runs:
     - id: apply
       name: Apply
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         INPUT_TYPE: ${{ inputs.type }}
         INPUT_PREFIX: ${{ inputs.prefix }}
@@ -104,16 +114,18 @@ runs:
           echo
           echo __GITHUB_EOF__
         } >> "$GITHUB_OUTPUT"
+        cd generated
+        echo "generated-folder=$(pwd)" >> "$GITHUB_OUTPUT"
     - name: Terraform output
       uses: actions/upload-artifact@v3
       with:
         name: terraform-output
         path: |
-          infrastructure/quick-deploy/${{ inputs.type }}/generated
-          !infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
-          !infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
-          !infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
-          infrastructure/quick-deploy/${{ inputs.type }}/all/generated
-          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
-          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
-          !infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
+          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
+          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
