@@ -129,3 +129,4 @@ runs:
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/**/.git
