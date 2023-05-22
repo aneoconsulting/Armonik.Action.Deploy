@@ -125,6 +125,7 @@ runs:
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/**/.git
           ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
