@@ -23,5 +23,5 @@ runs:
         set -ex
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
-        [ ! -e all ] || cd all
+        [ ! -e all-in-one ] || cd all-in-one
         make PREFIX="$INPUT_PREFIX" bootstrap-deploy
