@@ -27,7 +27,12 @@ runs:
         set -ex
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
-        [ ! -e all-in-one ] || cd all-in-one
+
+        if [ ! -e all-in-one ]; then
+          cd all-in-one
+        elif [ ! -e all ]; then
+          cd all
+        fi
         make PREFIX="$INPUT_PREFIX" init
         make PREFIX="$INPUT_PREFIX" output
         EKS_NAME="$(jq -r .eks.name generated/armonik-output.json)"

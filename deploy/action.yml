@@ -106,7 +106,12 @@ runs:
         set -ex
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
-        [ ! -e all-in-one ] || cd all-in-one
+
+        if [ ! -e all-in-one ]; then
+          cd all-in-one
+        elif [ ! -e all ]; then
+          cd all
+        fi
         make PREFIX="$INPUT_PREFIX" deploy
         {
           echo 'terraform-output<<__GITHUB_EOF__'
@@ -126,7 +131,12 @@ runs:
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/**/.git
-          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated
+          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/**/.git
+          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/modules
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/providers
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/.prefix
