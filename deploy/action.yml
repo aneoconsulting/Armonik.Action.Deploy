@@ -13,9 +13,13 @@ inputs:
     required: false
     default: ""
   ext-csharp-version:
-    description: "Version of Extension Csharp to deploy"
+    description: "Version of worker to deploy"
     required: false
     default: ""
+  worker-image:
+    description: "Image for the worker"
+    required: false
+    default: "dockerhubaneo/armonik_worker_dll"
   prefix:
     description: "Prefix for the deployment"
     required: false
@@ -81,6 +85,7 @@ runs:
         MTLS: ${{ inputs.mtls }}
         GENCERT: ${{ inputs.generate-client-cert }}
         CUSTOM_CA: ${{ inputs.custom-client-ca }}
+        WORKER: ${{ inputs.worker-image }}
       run: |
         set -ex
         ingress() {
@@ -94,7 +99,16 @@ runs:
             mv .extra.tfvars.json extra.tfvars.json
           fi
         }
+        worker() {
+          local worker
+          worker="$1"
+          jq --arg worker "$worker" '.armonik_images.extcsharp=[$worker]' extra.tfvars.json > .extra.tfvars.json
+          mv .extra.tfvars.json extra.tfvars.json
+        }
         ingress "$TLS" "$MTLS" "$GENCERT" "$CUSTOM_CA"
+        jq -s '.[0] * .[1]' versions.tfvars.json extra.tfvars.json > .extra.tfvars.json
+        mv .extra.tfvars.json extra.tfvars.json
+        worker $WORKER
     - id: apply
       name: Apply
       shell: bash
