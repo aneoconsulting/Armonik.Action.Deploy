@@ -1,0 +1,56 @@
+name: Test
+
+on:
+  push:
+
+jobs:
+  testDeploys:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Install Dependencies
+        uses: ./dependencies
+        with:
+          docker: true
+          terraform: true
+          k3s: true
+          aws: true
+
+      - name: Checkout Infra
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          repository: aneoconsulting/ArmoniK
+          path: infra
+
+      - name: Deploy
+        uses: ./deploy
+        with:
+          working-directory: ${{ github.workspace }}/infra
+          type: localhost
+          shared-data-folder: "${{ github.workspace }}/infra/infrastructure/quick-deploy/localhost/all-in-one/data/"
+          tls: true
+
+      - name: Check deployment
+        run: |
+          set -e
+          mkdir -p /tmp/armonik_dep
+          kubectl get all -n armonik -o json > /tmp/armonik_dep/deployment.json
+
+      - name: Store deployment result
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a
+        if: always()
+        with:
+          name: Logs Deployment
+          path: /tmp/armonik_dep/deployment.json
+          retention-days: 5
+
+      - name: Destroy
+        if: success() || failure()
+        uses: ./destroy
+        with:
+          working-directory: ${{ github.workspace }}/infra
+          type: localhost
