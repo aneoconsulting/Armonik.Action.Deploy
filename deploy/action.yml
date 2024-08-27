@@ -40,6 +40,10 @@ inputs:
     descriptiont: "Working directory (should be the ArmoniK repo root folder)"
     required: false
     default: ${{ github.workspace }}
+  shared-data-folder:
+    description: "Shared data folder to use with Extension Csharp"
+    required: false
+    default: ""
 outputs:
   terraform-output:
     description: "Terraform output of the deployment"
@@ -81,6 +85,7 @@ runs:
         MTLS: ${{ inputs.mtls }}
         GENCERT: ${{ inputs.generate-client-cert }}
         CUSTOM_CA: ${{ inputs.custom-client-ca }}
+        SHARED_HOST: ${{ inputs.shared-data-folder }}
       run: |
         set -ex
         ingress() {
@@ -95,6 +100,10 @@ runs:
           fi
         }
         ingress "$TLS" "$MTLS" "$GENCERT" "$CUSTOM_CA"
+        if [ -n "$SHARED_HOST" ]; then
+          jq --arg shared "$SHARED_HOST" '.shared_storage={host_path:$shared}' extra.tfvars.json > .extra.tfvars.json
+          mv .extra.tfvars.json extra.tfvars.json
+        fi
     - id: apply
       name: Apply
       shell: bash
