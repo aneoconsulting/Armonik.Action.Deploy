@@ -38,6 +38,6 @@ runs:
           cat ~/.kube/config
         else
           # Ignore the update_kubeconfig if there is no more EKS
-          TF_DATA_DIR=generated terraform state rm module.eks.null_resource.update_kubeconfig 2>&1 > /dev/null || true
+          TF_DATA_DIR=generated terraform state rm module.eks.null_resource.update_kubeconfig > /dev/null 2>&1 || true
         fi
         make PREFIX="$INPUT_PREFIX" delete
