@@ -115,12 +115,6 @@ runs:
         set -ex
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
-
-        if [ -e all-in-one ]; then
-          cd all-in-one
-        elif [ -e all ]; then
-          cd all
-        fi
         make PREFIX="$INPUT_PREFIX" deploy
         {
           echo 'terraform-output<<__GITHUB_EOF__'
@@ -131,25 +125,14 @@ runs:
         cd generated
         echo "generated-folder=$(pwd)" >> "$GITHUB_OUTPUT"
     - name: Terraform output
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: terraform-output
         path: |
           ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated
+          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/infra-modules
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/modules
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/providers
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/terraform-plugins
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/.prefix
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/**/.git
-          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/modules
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/providers
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/terraform-plugins
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/.prefix
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all/generated/**/.git
-          ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/modules
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/providers
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/terraform-plugins
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/.prefix
-          !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/all-in-one/generated/**/.git
