@@ -44,6 +44,10 @@ inputs:
     description: "Shared data folder to use with Extension Csharp"
     required: false
     default: ""
+  log-suffix:
+    description: "Suffix to append to the terraform output artifact"
+    required: false
+    default: "default"
 outputs:
   terraform-output:
     description: "Terraform output of the deployment"
@@ -127,7 +131,8 @@ runs:
     - name: Terraform output
       uses: actions/upload-artifact@v4
       with:
-        name: terraform-output
+        name: terraform-output-${{ inputs.log-suffix }}
+        overwrite: true
         path: |
           ${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated
           !${{ inputs.working-directory }}/infrastructure/quick-deploy/${{ inputs.type }}/generated/infra-modules
