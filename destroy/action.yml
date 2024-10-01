@@ -9,7 +9,7 @@ inputs:
     required: false
     default: "armonik-cicd"
   working-directory:
-    descriptiont: "Working directory (should be the ArmoniK repo root folder)"
+    description: "Working directory (should be the ArmoniK repo root folder)"
     required: false
     default: ${{ github.workspace }}
 
