@@ -27,6 +27,7 @@ runs:
         set -ex
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
+        make PREFIX="$INPUT_PREFIX" get-modules
         make PREFIX="$INPUT_PREFIX" init
         make PREFIX="$INPUT_PREFIX" output
         EKS_NAME="$(jq -r .eks.name generated/armonik-output.json)"
