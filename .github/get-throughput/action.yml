@@ -1,0 +1,37 @@
+name: "Get session throughput"
+description: "Action running an HTC Mock session"
+inputs:
+  grpc-client-endpoint:
+    description: "External IP address of ArmoniK's API"
+    required: true
+  working-directory:
+    description: "Working directory (should be the ArmoniK repo root folder)"
+    required: false
+    default: ${{ github.workspace }}
+  session-name:
+    description: "A name that is provided as the value for key 'SessionName' for the 'HtcMock__Options' option"
+    required: true
+  poll-duration-limit:
+    description: "The amount of seconds the throughtput getter will wait for the session to finish"
+    required: false
+    default: "600"
+# outputs:
+#   session-throughput:
+#     description: "Throughput for the session"
+#     value: ${{ steps.get-throughput.outputs }}
+runs:
+  using: composite
+  steps:
+    - id: get-throughput
+      name: Get session throughput
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+      env:
+        GRPC_CLIENT_ENDPOINT: ${{ inputs.grpc-client-endpoint }}
+        SESSION_NAME: ${{ inputs.session-name }}
+        POLL_DURATION_LIMIT: ${{ inputs.poll-duration-limit }}
+      run: |
+        set -ex
+        cd tools/ci/python
+        pip install requirements.txt
+        python program.py "$GRPC_CLIENT_ENDPOINT" "$SESSION_NAME" "$POLL_DURATION_LIMIT"
