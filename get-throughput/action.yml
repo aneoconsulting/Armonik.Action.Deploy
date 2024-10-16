@@ -15,10 +15,10 @@ inputs:
     description: "The amount of seconds the throughtput getter will wait for the session to finish"
     required: false
     default: "600"
-# outputs:
-#   session-throughput:
-#     description: "Throughput for the session"
-#     value: ${{ steps.get-throughput.outputs }}
+outputs:
+  bench-file-path:
+    description: "JSON with throughput for the session"
+    value: ${{ steps.get-throughput.outputs.bench-file-path }}
 runs:
   using: composite
   steps:
@@ -33,5 +33,5 @@ runs:
       run: |
         set -ex
         cd tools/ci/python
-        pip install requirements.txt
-        python program.py "$GRPC_CLIENT_ENDPOINT" "$SESSION_NAME" "$POLL_DURATION_LIMIT"
+        pip install -r requirements.txt
+        echo "bench-file-path=$(python program.py -n "$SESSION_NAME" --polling-limit "$POLL_DURATION_LIMIT" "$GRPC_CLIENT_ENDPOINT")" >> "$GITHUB_OUTPUT"
