@@ -32,6 +32,6 @@ runs:
         POLL_DURATION_LIMIT: ${{ inputs.poll-duration-limit }}
       run: |
         set -ex
-        cd tools/ci/python
-        pip install requirements.txt
-        python program.py "$GRPC_CLIENT_ENDPOINT" "$SESSION_NAME" "$POLL_DURATION_LIMIT"
+        cd ${{ inputs.working-directory }}/tools/ci/python
+        pip install -r requirements.txt
+        python program.py "$GRPC_CLIENT_ENDPOINT" "$SESSION_NAME" --polling-limit "$POLL_DURATION_LIMIT"
