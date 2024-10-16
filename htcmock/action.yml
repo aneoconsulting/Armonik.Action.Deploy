@@ -23,7 +23,14 @@ inputs:
     description: "A name that is provided as the value for key 'SessionName' for the 'HtcMock__Options' option"
     required: false
     default: "cicd"
-
+  purge-data:
+    description: "Whether to purge session after execution"
+    required: false
+    default: "false"
+outputs:
+  session-name:
+    description: "Name of the HTC Mock session to help retrieve its id"
+    value: ${{ steps.run.outputs.session-name }}
 runs:
   using: composite
   steps:
@@ -37,11 +44,11 @@ runs:
         SUBTASKS_LEVELS: ${{ inputs.subtasks-levels }}
         SESSION_NAME: ${{ inputs.session-name }}
         GRPC_CLIENT_ENDPOINT: ${{ inputs.grpc-client-endpoint }}
-        ARMONIK_KUBERNETES_NAMESPACE: ${{ inputs.armonik-kubernetes-namespace }}
+        PURGE_DATA: ${{ inputs.purge-data }}
       run: |
         set -ex
         cd tools/ci
-        echo "session-name=$SESSION_NAME" >> "$GITHUB_OUTPUTS"
-        sed "s/@@NTASKS@@/$NTASKS/g; s/@@SUBTASKS_LEVELS@@/$SUBTASKS_LEVELS/g; s/@@SESSION_NAME@@/$SESSION_NAME/g; s/@@GRPC_CLIENT_ENDPOINT@@/$GRPC_CLIENT_ENDPOINT/g" \
-          htcmock-job-template.yml | 
+        echo "session-name=$SESSION_NAME" >> "$GITHUB_OUTPUT"
+        sed "s/@@ARMONIK_CORE_VERSION@@/$ARMONIK_CORE_VERSION/g; s/@@NTASKS@@/$NTASKS/g; s/@@SUBTASKS_LEVELS@@/$SUBTASKS_LEVELS/g; s/@@SESSION_NAME@@/$SESSION_NAME/g; s/@@GRPC_CLIENT_ENDPOINT@@/$GRPC_CLIENT_ENDPOINT/g; s/@@PURGE_DATA@@/$PURGE_DATA/g" \
+          ${{ inputs.working-directory }}/tools/ci/htcmock-job-template.yml | 
           kubectl apply -f -
