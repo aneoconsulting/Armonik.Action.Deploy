@@ -8,8 +8,8 @@ inputs:
     description: "Number of tasks to be created"
     default: "100"
     required: false
-  subtasks-level:
-    description: "Level of subtasking"
+  subtasks-levels:
+    description: "Levels of subtasking"
     default: "1"
     required: false
   grpc-client-endpoint:
@@ -34,7 +34,7 @@ runs:
       env:
         ARMONIK_CORE_VERSION: ${{ inputs.armonik-core-version }}
         NTASKS: ${{ inputs.ntasks }}
-        SUBTASKS_LEVEL: ${{ inputs.subtasks-level }}
+        SUBTASKS_LEVELS: ${{ inputs.subtasks-levels }}
         SESSION_NAME: ${{ inputs.session-name }}
         GRPC_CLIENT_ENDPOINT: ${{ inputs.grpc-client-endpoint }}
         ARMONIK_KUBERNETES_NAMESPACE: ${{ inputs.armonik-kubernetes-namespace }}
