@@ -34,4 +34,4 @@ runs:
         set -ex
         cd ${{ inputs.working-directory }}/tools/ci/python
         pip install -r requirements.txt
-        python program.py "$GRPC_CLIENT_ENDPOINT" "$SESSION_NAME" --polling-limit "$POLL_DURATION_LIMIT"
+        python program.py -n "$SESSION_NAME" --polling-limit "$POLL_DURATION_LIMIT" "$GRPC_CLIENT_ENDPOINT"
