@@ -18,7 +18,7 @@ inputs:
 outputs:
   bench-file-path:
     description: "JSON with throughput for the session"
-    value: ${{ steps.get-throughput.outputs. }}
+    value: ${{ steps.get-throughput.outputs.bench-file-path }}
 runs:
   using: composite
   steps:
