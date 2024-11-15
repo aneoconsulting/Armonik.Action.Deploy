@@ -1,0 +1,67 @@
+name: "Run Bench session"
+description: "Action running a Bench session from a Kubernetes Job"
+inputs:
+  type:
+    description: 'Type of deployment (either "aws" or "localhost")'
+    required: true
+  armonik-core-version:
+    description: "Version of ArmoniK.Core to use"
+    required: true
+  ntasks:
+    description: "Number of tasks to be created"
+    default: "100"
+    required: false
+  grpc-client-endpoint:
+    description: "External IP address of ArmoniK's API"
+    required: true
+  working-directory:
+    description: "Working directory (should be the ArmoniK repo root folder)"
+    required: false
+    default: ${{ github.workspace }}
+  session-name:
+    description: "A name that is provided as the value for key 'SessionName' for the 'Bench__Options' option"
+    required: false
+    default: "cicd"
+  timeout:
+    description: "Time in seconds to wait for job to enter 'Complete' status in Kubernetes"
+    required: false
+    default: "600"
+outputs:
+  session-name:
+    description: "Name of the Bench session to help retrieve its id"
+    value: ${{ steps.run.outputs.session-name }}
+runs:
+  using: composite
+  steps:
+    - if: inputs.type == 'aws'
+      id: kubeconfig
+      name: Load kubeconfig
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+      env:
+        TYPE: ${{ inputs.type }}
+      run : |
+        set -ex
+        export KUBECONFIG="infrastructure/quick-deploy/$TYPE/generated/kubeconfig"
+        echo "kubeconfig=infrastructure/quick-deploy/$TYPE/generated/kubeconfig" >> $GITHUB_ENV
+
+    - id: run
+      name: Bench Client running
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+      env:
+        TIMEOUT: ${{ inputs.timeout }}
+        KUBECONFIG: ${{ env.kubeconfig || '' }}
+        ARMONIK_CORE_VERSION: ${{ inputs.armonik-core-version }}
+        NTASKS: ${{ inputs.ntasks }}
+        SESSION_NAME: ${{ inputs.session-name }}
+        GRPC_CLIENT_ENDPOINT: ${{ inputs.grpc-client-endpoint }}
+      run: |
+        set -ex
+        export KUBECONFIG="$KUBECONFIG"
+        sed "s/@@ARMONIK_CORE_VERSION@@/$ARMONIK_CORE_VERSION/g; s/@@NTASKS@@/$NTASKS/g; s/@@SESSION_NAME@@/$SESSION_NAME/g; s/@@GRPC_CLIENT_ENDPOINT@@/$GRPC_CLIENT_ENDPOINT/g" \
+          ${{ inputs.working-directory }}/tools/ci/bench-job-template.yml | 
+          kubectl apply -f - --validate=ignore
+        sleep 5
+        kubectl -n armonik wait --for=condition=Complete --timeout="${TIMEOUT}s" job/bench-session
+        echo "session-name=$SESSION_NAME" >> "$GITHUB_OUTPUT"

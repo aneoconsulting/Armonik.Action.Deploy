@@ -50,5 +50,5 @@ runs:
         cd tools/ci
         echo "session-name=$SESSION_NAME" >> "$GITHUB_OUTPUT"
         sed "s/@@ARMONIK_CORE_VERSION@@/$ARMONIK_CORE_VERSION/g; s/@@NTASKS@@/$NTASKS/g; s/@@SUBTASKS_LEVELS@@/$SUBTASKS_LEVELS/g; s/@@SESSION_NAME@@/$SESSION_NAME/g; s/@@GRPC_CLIENT_ENDPOINT@@/$GRPC_CLIENT_ENDPOINT/g; s/@@PURGE_DATA@@/$PURGE_DATA/g" \
-          ${{ inputs.working-directory }}/tools/ci/htcmock-job-template.yml | 
+          tools/ci/htcmock-job-template.yml | 
           kubectl apply -f -
