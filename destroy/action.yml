@@ -31,7 +31,7 @@ runs:
       run: |
         set -ex
         if [ -n "$PARAMETERS_FILE_PATH" ]; then
-          PARAMETERS_FILE="$(pwd)/$PARAMETERS_FILE"
+          PARAMETERS_FILE="$(pwd)/$PARAMETERS_FILE_PATH"
         fi
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
