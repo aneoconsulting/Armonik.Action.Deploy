@@ -12,6 +12,10 @@ inputs:
     description: "Working directory (should be the ArmoniK repo root folder)"
     required: false
     default: ${{ github.workspace }}
+  parameters-file-path:
+    description: "Relative path for the Terraform configuration file, root being the ArmoniK repository. Empty keeps it to the default parameters.tfvars associated with your deployment type"
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -23,8 +27,12 @@ runs:
       env:
         INPUT_TYPE: ${{ inputs.type }}
         INPUT_PREFIX: ${{ inputs.prefix }}
+        PARAMETERS_FILE_PATH: ${{ inputs.parameters-file-path }}
       run: |
         set -ex
+        if [ -n "$PARAMETERS_FILE_PATH" ]; then
+          export PARAMETERS_FILE="$(pwd)/$PARAMETERS_FILE_PATH"
+        fi
         cd infrastructure/quick-deploy/
         cd "$INPUT_TYPE"
         make PREFIX="$INPUT_PREFIX" get-modules
