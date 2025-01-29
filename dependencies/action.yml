@@ -22,15 +22,36 @@ inputs:
     required: false
     default: false
   AWS_ACCESS_KEY_ID:
+    description: "Access key for AWS"
     required: false
     default: ""
   AWS_SECRET_ACCESS_KEY:
+    description: "Secret access key for AWS"
     required: false
     default: ""
   AWS_REGION:
+    description: "Region for AWS"
     required: false
     default: ""
   K3S_VERSION:
+    description: "Version of K3s to install"
+    required: false
+    default: ""
+  gcp:
+    description: "Install GCP CLI"
+    type: boolean
+    required: false
+    default: false
+  GCP_PROJECT_ID:
+    description: "Project ID for GCP"
+    required: false
+    default: ""
+  GCP_SERVICE_ACCOUNT_KEY:
+    description: "Service account key for GCP"
+    required: false
+    default: ""
+  GCP_REGION:
+    description: "Region for GCP"
     required: false
     default: ""
 
@@ -52,7 +73,7 @@ runs:
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
           sudo apt-get install -y terraform
-        fi 
+        fi
     - if: ${{ inputs.aws && inputs.aws != 'false' }}
       name: Install AWS CLI
       shell: bash
@@ -83,7 +104,6 @@ runs:
         fi
 
         docker run hello-world
-        
     - if: ${{ inputs.k3s && inputs.k3s != 'false' }}
       name: Install K3s
       shell: bash
@@ -125,4 +145,31 @@ runs:
         [default]
         region = $AWS_REGION
         EOF
+        fi
+    - if: ${{ inputs.gcp && inputs.gcp != 'false' }}
+      name: Install GCP CLI
+      shell: bash
+      run: |
+        set -ex
+        if ! command -v gcloud &>/dev/null; then
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+          sudo apt-get update
+          sudo apt-get install -y google-cloud-sdk
+        fi
+    - if: ${{ inputs.gcp && inputs.gcp != 'false' }}
+      name: GCP Config
+      shell: bash
+      env:
+        GCP_PROJECT_ID: ${{ inputs.GCP_PROJECT_ID }}
+        GCP_SERVICE_ACCOUNT_KEY: ${{ inputs.GCP_SERVICE_ACCOUNT_KEY }}
+        GCP_REGION: ${{ inputs.GCP_REGION }}
+      run: |
+        set -ex
+        if [ -n "$GCP_SERVICE_ACCOUNT_KEY" ]; then
+          echo "$GCP_SERVICE_ACCOUNT_KEY" > "$HOME"/gcp-key.json
+          chmod 600 "$HOME"/gcp-key.json  # Restrict file permissions
+          gcloud auth activate-service-account --key-file="$HOME"/gcp-key.json
+          gcloud config set project "$GCP_PROJECT_ID"
+          gcloud config set compute/region "$GCP_REGION"
         fi
