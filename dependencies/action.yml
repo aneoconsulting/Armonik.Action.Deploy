@@ -146,6 +146,7 @@ runs:
         region = $AWS_REGION
         EOF
         fi
+
     - if: ${{ inputs.gcp && inputs.gcp != 'false' }}
       name: Install GCP CLI
       shell: bash
@@ -155,21 +156,18 @@ runs:
           echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
           curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
           sudo apt-get update
-          sudo apt-get install -y google-cloud-sdk
+          sudo apt-get install -y google-cloud-cli 
         fi
+
     - if: ${{ inputs.gcp && inputs.gcp != 'false' }}
-      name: GCP Config
-      shell: bash
-      env:
-        GCP_PROJECT_ID: ${{ inputs.GCP_PROJECT_ID }}
-        GCP_SERVICE_ACCOUNT_KEY: ${{ inputs.GCP_SERVICE_ACCOUNT_KEY }}
-        GCP_REGION: ${{ inputs.GCP_REGION }}
-      run: |
-        set -ex
-        if [ -n "$GCP_SERVICE_ACCOUNT_KEY" ]; then
-          echo "$GCP_SERVICE_ACCOUNT_KEY" > "$HOME"/gcp-key.json
-          chmod 600 "$HOME"/gcp-key.json  # Restrict file permissions
-          gcloud auth activate-service-account --key-file="$HOME"/gcp-key.json
-          gcloud config set project "$GCP_PROJECT_ID"
-          gcloud config set compute/region "$GCP_REGION"
-        fi
+      name: Authenticate with GCP
+      uses: "google-github-actions/auth@v2"
+      with:
+        credentials_json: ${{ inputs.GCP_SERVICE_ACCOUNT_KEY }}
+
+    - if: ${{ inputs.gcp && inputs.gcp != 'false' }}
+      name: Set up Cloud SDK
+      uses: "google-github-actions/setup-gcloud@v2"
+      with:
+        project_id: ${{ inputs.GCP_PROJECT_ID }}
+        install_components: gke-gcloud-auth-plugin

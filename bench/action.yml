@@ -2,7 +2,7 @@ name: "Run Bench session"
 description: "Action running a Bench session from a Kubernetes Job"
 inputs:
   type:
-    description: 'Type of deployment (either "aws" or "localhost")'
+    description: 'Type of deployment ("aws", "gcp" or "localhost")'
     required: true
   armonik-core-version:
     description: "Version of ArmoniK.Core to use"
@@ -33,14 +33,14 @@ outputs:
 runs:
   using: composite
   steps:
-    - if: inputs.type == 'aws'
+    - if: inputs.type == 'aws' || inputs.type == 'gcp'
       id: kubeconfig
       name: Load kubeconfig
       working-directory: ${{ inputs.working-directory }}
       shell: bash
       env:
         TYPE: ${{ inputs.type }}
-      run : |
+      run: |
         set -ex
         export KUBECONFIG="infrastructure/quick-deploy/$TYPE/generated/kubeconfig"
         echo "kubeconfig=infrastructure/quick-deploy/$TYPE/generated/kubeconfig" >> $GITHUB_ENV

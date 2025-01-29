@@ -2,7 +2,7 @@ name: "Deploy ArmoniK"
 description: "Action to deploy ArmoniK"
 inputs:
   type:
-    description: 'Type of deployment (either "aws" or "localhost")'
+    description: 'Type of deployment (either "aws", "gcp" or "localhost")'
     required: true
   core-version:
     description: "Version of core to deploy"
@@ -31,7 +31,7 @@ inputs:
   generate-client-cert:
     description: "Generate custom client certificates"
     required: false
-    default : false
+    default: false
   custom-client-ca:
     description: "Path to custom client certificate authority"
     required: false
