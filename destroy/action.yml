@@ -43,24 +43,24 @@ runs:
         if [ "$INPUT_TYPE" = "aws" ]; then
           EKS_NAME="$(jq -r .eks.name generated/armonik-output.json)"
           EKS_REGION="$(jq -r .eks.region generated/armonik-output.json)"
-          [ "$EKS_NAME" != null ] || EKS_NAME=
-          [ "$EKS_REGION" != null ] || EKS_REGION=
-          if [ -n "$EKS_NAME" ] && [ -n "$EKS_REGION" ]; then
+          if [ "${EKS_NAME:-null}" != null ] && [ "${EKS_REGION:-null}" != null ]; then
             aws eks update-kubeconfig --region "$EKS_REGION" --name "$EKS_NAME"
             cat ~/.kube/config
+          else 
+            # Ignore the update-kubeconfig if there is no EKS
+            TF_DATA_DIR=generated terraform state rm module.eks.null_resource.update_kubeconfig > /dev/null 2>&1 || true
           fi
-          make PREFIX="$INPUT_PREFIX" delete
 
         elif [ "$INPUT_TYPE" = "gcp" ]; then
           GKE_NAME="$(jq -r .gke.name generated/armonik-output.json)"
-          GKE_REGION="$(jq -r .gke.region generated/armonik-output.json)"
-          [ "$GKE_NAME" != null ] || GKE_NAME=
-          [ "$GKE_REGION" != null ] || GKE_REGION=
-          if [ -n "$GKE_NAME" ] && [ -n "$GKE_REGION" ]; then
-            gcloud container clusters get-credentials "$GKE_NAME" --region "$GKE_REGION"
+          GKE_LOCATION="$(jq -r .gke.region generated/armonik-output.json)"
+          if [ "${GKE_NAME:-null}" != null ] && [ "${GKE_LOCATION:-null}" != null ]; then
+            gcloud container clusters get-credentials "$GKE_NAME" --location "$GKE_LOCATION"
+            cat ~/.kube/config
+          else 
+            # Ignore the update-kubeconfig if there is no GKE
+            TF_DATA_DIR=generated terraform state rm module.gke.null_resource.update_kubeconfig > /dev/null 2>&1 || true
           fi
-          make PREFIX="$INPUT_PREFIX" delete
-
-        else
-          make PREFIX="$INPUT_PREFIX" delete
         fi
+
+        make PREFIX="$INPUT_PREFIX" delete
