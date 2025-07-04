@@ -1,8 +1,8 @@
 name: "Bootstrap deploy"
-description: "Action to deploy S3 for deployment tfstates"
+description: "Action to deploy remote state for tfstates"
 inputs:
   type:
-    description: 'Type of deployment (for now, only "aws")'
+    description: 'Type of deployment (for now, "aws" or "gcp")'
     required: false
     default: "aws"
   prefix:

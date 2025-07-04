@@ -6,8 +6,13 @@ inputs:
     type: boolean
     required: false
     default: false
+  gcp:
+    description: "Install GCP CLI"
+    type: boolean
+    required: false
+    default: false
   docker:
-    description: "Install docker"
+    description: "Install Docker"
     type: boolean
     required: false
     default: false
@@ -22,15 +27,31 @@ inputs:
     required: false
     default: false
   AWS_ACCESS_KEY_ID:
+    description: "Access key for AWS"
     required: false
     default: ""
   AWS_SECRET_ACCESS_KEY:
+    description: "Secret access key for AWS"
     required: false
     default: ""
   AWS_REGION:
+    description: "Region for AWS"
     required: false
     default: ""
   K3S_VERSION:
+    description: "Version of K3s to install"
+    required: false
+    default: ""
+  GCP_PROJECT_ID:
+    description: "Project ID for GCP"
+    required: false
+    default: ""
+  GCP_SERVICE_ACCOUNT_KEY:
+    description: "Service account key for GCP"
+    required: false
+    default: ""
+  GCP_REGION:
+    description: "Region for GCP"
     required: false
     default: ""
 
@@ -52,7 +73,7 @@ runs:
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
           sudo apt-get install -y terraform
-        fi 
+        fi
     - if: ${{ inputs.aws && inputs.aws != 'false' }}
       name: Install AWS CLI
       shell: bash
@@ -83,7 +104,6 @@ runs:
         fi
 
         docker run hello-world
-        
     - if: ${{ inputs.k3s && inputs.k3s != 'false' }}
       name: Install K3s
       shell: bash
@@ -126,3 +146,16 @@ runs:
         region = $AWS_REGION
         EOF
         fi
+
+    - if: ${{ inputs.gcp && inputs.gcp != 'false' }}
+      name: Authenticate with GCP
+      uses: "google-github-actions/auth@v2"
+      with:
+        credentials_json: ${{ inputs.GCP_SERVICE_ACCOUNT_KEY }}
+
+    - if: ${{ inputs.gcp && inputs.gcp != 'false' }}
+      name: Set up Cloud SDK
+      uses: "google-github-actions/setup-gcloud@v2"
+      with:
+        project_id: ${{ inputs.GCP_PROJECT_ID }}
+        install_components: gke-gcloud-auth-plugin
