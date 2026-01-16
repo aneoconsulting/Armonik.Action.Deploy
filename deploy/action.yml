@@ -36,6 +36,22 @@ inputs:
     description: "Path to custom client certificate authority"
     required: false
     default: ""
+  require-authentication:
+    description: "Use authentication"
+    required: false
+    default: false
+  require-authorization:
+    description: "Use authorization"
+    required: false
+    default: false
+  trusted-cns:
+    description: "List of trusted common names"
+    required: false
+    default: "[]"
+  auth-datafile:
+    description: "Path to custom authentication configuration data file"
+    required: false
+    default: ""
   working-directory:
     description: "Working directory (should be the ArmoniK repo root folder)"
     required: false
@@ -95,6 +111,10 @@ runs:
         GENCERT: ${{ inputs.generate-client-cert }}
         CUSTOM_CA: ${{ inputs.custom-client-ca }}
         SHARED_HOST: ${{ inputs.shared-data-folder }}
+        AUTHENTICATION: ${{ inputs.require-authentication }}
+        AUTHORIZATION: ${{ inputs.require-authorization }}
+        AUTH_DATAFILE: ${{ inputs.auth-datafile }}
+        TRUSTED_CNS: ${{ inputs.trusted-cns }}
       run: |
         set -ex
         ingress() {
@@ -104,7 +124,8 @@ runs:
           gencert="$3"
           custom_ca="$4"
           if [ "$tls" == "true" ]; then
-            jq --argjson tls "$tls" --argjson mtls "$mtls" --argjson gencert "$gencert" --arg custom_ca "$custom_ca" '.ingress={tls:$tls, mtls:$mtls, generate_client_cert:$gencert, custom_client_ca_file:$custom_ca}' extra.tfvars.json > .extra.tfvars.json
+            jq --argjson tls "$tls" --argjson mtls "$mtls" --argjson gencert "$gencert" --arg custom_ca "$custom_ca" \
+            '.ingress={tls:$tls, mtls:$mtls, generate_client_cert:$gencert, custom_client_ca_file:$custom_ca}' extra.tfvars.json > .extra.tfvars.json
             mv .extra.tfvars.json extra.tfvars.json
           fi
         }
@@ -113,6 +134,19 @@ runs:
           jq --arg shared "$SHARED_HOST" '.shared_storage={host_path:$shared}' extra.tfvars.json > .extra.tfvars.json
           mv .extra.tfvars.json extra.tfvars.json
         fi
+        auth() {
+          local authentication authorization auth_datafile trusted_cns
+          authentication="$1"
+          authorization="$2"
+          auth_datafile="$3"
+          trusted_cns="$4"
+          if [ "$authentication" == "true" ]; then
+            jq --argjson authentication "$authentication" --argjson authorization "$authorization" --arg auth_datafile "$auth_datafile" --arg trusted_cns "$trusted_cns" \
+            '.authentication={require_authentication:$authentication, require_authorization:$authorization, authentication_datafile:$auth_datafile, trusted_common_names:$trusted_cns}' extra.tfvars.json > .extra.tfvars.json
+            mv .extra.tfvars.json extra.tfvars.json
+          fi
+        }
+        auth "$AUTHENTICATION" "$AUTHORIZATION" "$AUTH_DATAFILE" "$TRUSTED_CNS"
     - id: apply
       name: Apply
       shell: bash
