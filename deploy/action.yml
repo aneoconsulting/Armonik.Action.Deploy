@@ -45,9 +45,9 @@ inputs:
     required: false
     default: false
   trusted-cns:
-    description: "List of trusted common names"
+    description: "List (of strings) of trusted common names"
     required: false
-    default: "[]"
+    default: '[]'
   auth-datafile:
     description: "Path to custom authentication configuration data file"
     required: false
@@ -139,9 +139,9 @@ runs:
           authentication="$1"
           authorization="$2"
           auth_datafile="$3"
-          trusted_cns="$4"
+          trusted_cns=$4
           if [ "$authentication" == "true" ]; then
-            jq --argjson authentication "$authentication" --argjson authorization "$authorization" --arg auth_datafile "$auth_datafile" --arg trusted_cns "$trusted_cns" \
+            jq --argjson authentication "$authentication" --argjson authorization "$authorization" --arg auth_datafile "$auth_datafile" --argjson trusted_cns "$trusted_cns" \
             '.authentication={require_authentication:$authentication, require_authorization:$authorization, authentication_datafile:$auth_datafile, trusted_common_names:$trusted_cns}' extra.tfvars.json > .extra.tfvars.json
             mv .extra.tfvars.json extra.tfvars.json
           fi
