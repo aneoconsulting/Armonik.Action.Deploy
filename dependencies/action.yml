@@ -42,7 +42,9 @@ runs:
       run: |
         set -ex
         sudo apt-get update
-        sudo apt-get install -y apt-transport-https ca-certificates unzip curl gnupg lsb-release jq python3 python-is-python3 python3-pip
+        sudo apt-get install -y apt-transport-https ca-certificates unzip curl gnupg lsb-release jq python3 python-is-python3 python3-pip python3-pytest
+        wget https://github.com/fullstorydev/grpcurl/releases/download/v1.9.3/grpcurl_1.9.3_linux_amd64.deb
+        sudo dpkg -i grpcurl_1.9.3_linux_amd64.deb
     - if: ${{ inputs.terraform && inputs.terraform != 'false' }}
       name: Install Terraform
       shell: bash
@@ -72,7 +74,7 @@ runs:
           curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
           sudo groupadd -f docker
           sudo usermod -aG docker "$USER"
