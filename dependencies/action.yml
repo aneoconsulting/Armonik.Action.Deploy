@@ -54,7 +54,7 @@ runs:
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=$(dpkg --print-architecture)] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
           sudo apt-get install -y terraform
-        fi 
+        fi
     - if: ${{ inputs.aws && inputs.aws != 'false' }}
       name: Install AWS CLI
       shell: bash
@@ -85,7 +85,18 @@ runs:
         fi
 
         docker run hello-world
-        
+
+    - name: Install Kubectl
+      shell: bash
+      run: |
+        set -ex
+        if ! which kubectl 2>/dev/null; then
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+          echo "$(cat kubectl.sha256) kubectl" | sha256sum --check
+          mkdir -p ~/.kube
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+        fi
     - if: ${{ inputs.k3s && inputs.k3s != 'false' }}
       name: Install K3s
       shell: bash
@@ -95,15 +106,6 @@ runs:
         set -ex
         curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644 --write-kubeconfig ~/.kube/config
         sudo chown runner: -R ~/.kube
-    - name: Install Kubectl
-      shell: bash
-      run: |
-        set -ex
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-        curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
-        echo "$(cat kubectl.sha256) kubectl" | sha256sum --check
-        mkdir -p ~/.kube
-        sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
     - if: ${{ inputs.aws && inputs.aws != 'false' }}
       name: AWS Config
       shell: bash
