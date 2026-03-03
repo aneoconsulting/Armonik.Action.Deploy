@@ -52,6 +52,10 @@ inputs:
     description: "Path to custom authentication configuration data file"
     required: false
     default: ""
+  load-balancer:
+    description: "Whether to expose ArmoniK through its Load Balancer"
+    required: false
+    default: false
   working-directory:
     description: "Working directory (should be the ArmoniK repo root folder)"
     required: false
@@ -115,6 +119,7 @@ runs:
         AUTHORIZATION: ${{ inputs.require-authorization }}
         AUTH_DATAFILE: ${{ inputs.auth-datafile }}
         TRUSTED_CNS: ${{ inputs.trusted-cns }}
+        LOAD_BALANCER: ${{ inputs.load-balancer}}
       run: |
         set -ex
         ingress() {
@@ -147,6 +152,15 @@ runs:
           fi
         }
         auth "$AUTHENTICATION" "$AUTHORIZATION" "$AUTH_DATAFILE" "$TRUSTED_CNS"
+        loadbalancer() {
+          local loadbalancer
+          loadbalancer="$1"
+          if [ "$loadbalancer" == "true" ]; then
+            jq --argjson lb "$loadbalancer" '.load_balancer={}' extra.tfvars.json > .extra.tfvars.json
+            mv .extra.tfvars.json
+          fi
+        }
+        loadbalancer "$LOAD_BALANCER"
     - id: apply
       name: Apply
       shell: bash
