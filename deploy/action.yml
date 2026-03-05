@@ -156,8 +156,8 @@ runs:
           local loadbalancer
           loadbalancer="$1"
           if [ "$loadbalancer" == "true" ]; then
-            jq --argjson lb "$loadbalancer" '.load_balancer={}' extra.tfvars.json > .extra.tfvars.json
-            mv .extra.tfvars.json
+            jq '.load_balancer={extra_env:{RUST_LOG:"info,armonik=info,load_balancer=debug"}}' extra.tfvars.json > .extra.tfvars.json
+            mv .extra.tfvars.json extra.tfvars.json
           fi
         }
         loadbalancer "$LOAD_BALANCER"
