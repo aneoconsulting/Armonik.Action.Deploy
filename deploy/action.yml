@@ -16,6 +16,26 @@ inputs:
     description: "Version of Extension Csharp to deploy"
     required: false
     default: ""
+  override-compute:
+    description: "Override compute plane configuration"
+    required: false
+    default: false
+  override-worker-version:
+    description: "Override worker version (requires override-compute to be true)"
+    required: false
+    default: "latest"
+  override-worker-partition:
+    description: "Override worker partition (requires override-compute to be true)"
+    required: false
+    default: "default"
+  override-worker-image:
+    description: "Override worker image (requires override-compute to be true)"
+    required: false
+    default: "dockerhubaneo/armonik_worker_dll"
+  override-worker-socket:
+    description: "Override worker socket (requires override-compute to be true)"
+    required: false
+    default: "unixdomainsocket"
   prefix:
     description: "Prefix for the deployment"
     required: false
@@ -120,6 +140,11 @@ runs:
         AUTH_DATAFILE: ${{ inputs.auth-datafile }}
         TRUSTED_CNS: ${{ inputs.trusted-cns }}
         LOAD_BALANCER: ${{ inputs.load-balancer}}
+        OVERRIDE_COMPUTE: ${{ inputs.override-compute }}
+        OVERRIDE_WORKER_VERSION: ${{ inputs.override-worker-version }}
+        OVERRIDE_WORKER_PARTITION: ${{ inputs.override-worker-partition }}
+        OVERRIDE_WORKER_IMAGE: ${{ inputs.override-worker-image }}
+        OVERRIDE_WORKER_SOCKET: ${{ inputs.override-worker-socket }}
       run: |
         set -ex
         ingress() {
@@ -161,6 +186,52 @@ runs:
           fi
         }
         loadbalancer "$LOAD_BALANCER"
+        if [ "$OVERRIDE_COMPUTE" == "true" ]; then
+           compute_plane() {
+             local worker_version worker_partition worker_image worker_socket
+             worker_version="$1"
+             worker_partition="$2"
+             worker_image="$3"
+             worker_socket="$4"
+             jq --arg partition_name "$worker_partition" \
+                --arg socket_type "$worker_socket" \
+                --arg worker_image "$worker_image" \
+                --arg worker_tag "$worker_version" \
+                '.compute_plane={
+                  ($partition_name): {
+                    replicas: 0,
+                    socket_type: $socket_type,
+                    polling_agent: {
+                      limits: { cpu: "1000m", memory: "1024Mi" },
+                      requests: { cpu: "50m", memory: "50Mi" }
+                    },
+                    worker: [{
+                      image: $worker_image,
+                      tag: $worker_tag,
+                      limits: { cpu: "1000m", memory: "1024Mi" },
+                      requests: { cpu: "50m", memory: "50Mi" }
+                    }],
+                    hpa: {
+                      type: "prometheus",
+                      polling_interval: 15,
+                      cooldown_period: 300,
+                      min_replica_count: 0,
+                      max_replica_count: 5,
+                      behavior: {
+                        restore_to_original_replica_count: true,
+                        stabilization_window_seconds: 300,
+                        type: "Percent",
+                        value: 100,
+                        period_seconds: 15
+                      },
+                      triggers: [{ type: "prometheus", threshold: 2 }]
+                    }
+                  }
+                }' extra.tfvars.json > .extra.tfvars.json
+             mv .extra.tfvars.json extra.tfvars.json
+           }
+           compute_plane "$OVERRIDE_WORKER_VERSION" "$OVERRIDE_WORKER_PARTITION" "$OVERRIDE_WORKER_IMAGE" "$OVERRIDE_WORKER_SOCKET"
+        fi
     - id: apply
       name: Apply
       shell: bash
